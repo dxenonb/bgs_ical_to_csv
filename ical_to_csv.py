@@ -7,8 +7,16 @@ r = requests.get(url)
 #cal = Calendar.from_ical(r.content)
 cal = Calendar(r.text)
 
+event_kinds = {
+    'Jam' : 'jam',
+    'BGS Project Night' : 'project',
+    'BGS Game Development' : 'showcase',
+    'Workshop' : 'workshop',
+    'Arcade' : 'arcade'
+}
+
 with open('cal_parsed.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+    writer = csv.writer(csvfile, delimiter=',' )
     writer.writerow(
         [
             'kind',
@@ -22,10 +30,14 @@ with open('cal_parsed.csv', 'w', newline='') as csvfile:
         ]
     )
     for event in cal.events:
+        kind = "kind"
         if event.status == "CONFIRMED":
+            for key in event_kinds.keys():
+                if event.name.__contains__(key):
+                    kind = event_kinds[key]
             writer.writerow(
                 [
-                    "kind", 
+                    kind, 
                     event.name, 
                     event.begin.date(), 
                     "1", 
