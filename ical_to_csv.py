@@ -9,6 +9,18 @@ cal = Calendar(r.text)
 
 with open('cal_parsed.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+    writer.writerow(
+        [
+            'kind',
+            'name',
+            'date',
+            'repeat_count',
+            'days_between',
+            'start_time',
+            'end_time',
+            'location'
+        ]
+    )
     for event in cal.events:
         if event.status == "CONFIRMED":
             writer.writerow(
