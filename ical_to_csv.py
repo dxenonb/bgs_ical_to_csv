@@ -8,7 +8,7 @@ r = requests.get(url)
 cal = Calendar(r.text)
 
 with open('cal_parsed.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
+    writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
     for event in cal.events:
         if event.status == "CONFIRMED":
             writer.writerow(
