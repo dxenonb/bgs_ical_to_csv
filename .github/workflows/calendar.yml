@@ -1,4 +1,4 @@
-name: CLI
+name: Calendar
 
 on:
   push:
@@ -11,10 +11,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  post:
-    name: Builds project, fetching latest metadata and verifying configuration
+  post_test:
+    name: Runs the script and prints to the log
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
