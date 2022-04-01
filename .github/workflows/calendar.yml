@@ -1,0 +1,30 @@
+name: CLI
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  post:
+    name: Builds project, fetching latest metadata and verifying configuration
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ics
+      - name: Run
+        run: python3 ical_to_csv.py && cat cal_parsed.csv | python3 csv_to_calendar.py
