@@ -2,9 +2,9 @@ name: Calendar
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: "0 6 * * MON-FRI"
   workflow_dispatch:
 
 env:
