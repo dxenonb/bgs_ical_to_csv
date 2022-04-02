@@ -8,13 +8,17 @@ import json
 
 ical_limit = datetime.date.today() + timedelta(weeks=8)
 
-default_preface = '''
-Our current event schedule is a Game Dev Meetup/Showcase, every two weeks, alternating in person and virtual.
-'''.strip()
+default_preface = ''
+# for the moment, going to maintain this message manually in Discord.
+# default_preface = '''
+# Our current event schedule is a Game Dev Meetup/Showcase, every two weeks, alternating in person and virtual.
+# '''.strip()
+
+# Ommitting from message for now:
+# **__*Upcoming Events*__**
+# {preface}
 
 calendar_message_format = '''
-**__*Upcoming Events*__**
-{preface}
 **__*Upcoming Virtual Events*__**
 {virtual_events}
 Links for joining will be posted near the time of the event. Keep a lookout in  #general!
@@ -37,8 +41,13 @@ events_csv_header = [
     'location'
 ]
 
+# shorten/change some locations
+location_map = {
+    'Buffalo Game Space (2495 Main Street, Suite #454, Buffalo, NY 14214)': 'BGS, 2495 Main St., Suite #454'
+}
+
 emoji = {
-    'kind': 'green_square',
+    'kind': 'calendar_spiral',
     'showcase': 'night_with_stars',
     'location': 'pushpin',
     'jam': 'video_game',
@@ -56,11 +65,9 @@ class Event:
         self.location = location
         self.virtual = location is None
     def line_item_args(self):
-        try:
-            emoji_string = emoji[self.kind]
-        except KeyError:
-            # default to just sending the string through, as a discord emoji identifier
-            emoji_string = f':{self.kind}:'
+        # default to just sending the strings through
+        emoji_string = emoji.get(self.kind, f':{self.kind}:')
+        location_string = location_map.get(self.location, self.location)
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, self.location)
 
 def ordinal_date(date):
