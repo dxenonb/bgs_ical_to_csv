@@ -66,6 +66,9 @@ class Event:
         self.virtual = location is None
     def line_item_args(self):
         # default to just sending the strings through
+        # remove any `:` in case the caller already included them, e.g. ":kind:"
+        emoji_string = self.kind.replace(':', '')
+        # attempt to lookup an emoji as an event kind, else wrap it in `:` to treat it as an emoji
         emoji_string = emoji.get(self.kind, f':{self.kind}:')
         location_string = location_map.get(self.location, self.location)
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
