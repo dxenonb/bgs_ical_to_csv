@@ -68,7 +68,7 @@ class Event:
         # default to just sending the strings through
         emoji_string = emoji.get(self.kind, f':{self.kind}:')
         location_string = location_map.get(self.location, self.location)
-        return (emoji_string, self.title, self.date, self.start_time, self.end_time, self.location)
+        return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
 
 def ordinal_date(date):
     d = date.day
