@@ -81,7 +81,7 @@ class Event:
         emoji_string = emoji.get(self.kind, self.kind)
         location_string = location_map.get(self.location, self.location)
         if location_string != '' and emoji['location'] not in location_string:
-            location_string = f':{emoji['location']}: {location_string}'
+            location_string = f":{emoji['location']}: {location_string}"
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
 
 def ordinal_date(date):
