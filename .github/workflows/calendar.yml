@@ -23,7 +23,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install ics requests
       - name: Run
-        run: python3 ical_to_csv.py && cat cal_parsed.csv | python3 csv_to_calendar.py
+        run: |
+          python3 ical_to_csv.py
+          echo Parsed calendar:
+          cat cal_parsed.csv
+          echo Rendered message:
+          cat cal_parsed.csv | python3 csv_to_calendar.py
   post:
     name: Runs the script and posts to webhook
     runs-on: ubuntu-latest
