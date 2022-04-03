@@ -23,13 +23,15 @@ default_preface = ''
 # **__*Upcoming Events*__**
 # {preface}
 
-calendar_message_format = '''
+virtual_message_format = '''
 **__*Upcoming Virtual Events*__**
 
 {virtual_events}
 
 Links for joining will be posted near the time of the event. Keep a lookout in  #general!
+'''.strip()
 
+in_person_message_format = '''
 ***__Upcoming In-Person Events__***
 
 {in_person_events}
@@ -109,12 +111,15 @@ def format_calendar(preface, in_person, virtual):
     virtual_events = line_items(line_item(*i) for i in virtual).strip()
     in_person_events = line_items(line_item(*i) for i in in_person).strip()
 
-    return calendar_message_format.format(
+    v = virtual_message_format.format(
         preface=preface, 
         virtual_events=virtual_events, 
+    )
+    ip = in_person_message_format.format(
         in_person_events=in_person_events, 
         after_note=after_note
     )
+    return v, ip
 
 def try_read_stdin():
     if not os.isatty(sys.stdin.fileno()):
@@ -164,12 +169,16 @@ def main():
     virtual = (i.line_item_args() for i in events if i.virtual)
     in_person = (i.line_item_args() for i in events if not i.virtual)
 
-    message = format_calendar(preface, in_person, virtual)
+    virtual_message, in_person_message = format_calendar(preface, in_person, virtual)
 
     if automated_run:
-        print(json.dumps({
-            'content': message
+        Path(virtual_message_path).write_text(json.dumps({
+            'content': virtual_message
         }))
+        Path(in_person_message_path).write_text(json.dumps({
+            'content': in_person_message
+        }))
+        print(f'Messages written to {virtual_message_path} and {in_person_message_path}')
     else:
         print('== REVIEW & COPY INTO DISCORD: ==')
         print(message)
