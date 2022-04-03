@@ -6,6 +6,11 @@ import os
 import sys
 import json
 
+events_path = 'events.csv'
+preface_path = 'preface.txt'
+in_person_message_path = 'in_person.json'
+virtual_message_path = 'virtual.json'
+
 ical_limit = datetime.date.today() + timedelta(weeks=8)
 
 default_preface = ''
@@ -80,7 +85,7 @@ class Event:
         # attempt to lookup an emoji for event kind, else let `kind` fall through as the emoji
         emoji_string = emoji.get(self.kind, self.kind)
         location_string = location_map.get(self.location, self.location)
-        if location_string != '' and emoji['location'] not in location_string:
+        if location_string is not None and location_string != '' and emoji['location'] not in location_string:
             location_string = f":{emoji['location']}: {location_string}"
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
 
@@ -134,14 +139,14 @@ def parse_events(lines):
 
 def main():
     try:
-        preface = Path('preface.txt').read_text()
+        preface = Path(preface_path).read_text()
     except IOError:
         preface = default_preface
     
     automated_run = False
     contents = try_read_stdin()
     if contents is None:
-        with open('events.csv', newline='') as file:
+        with open(events_path, newline='') as file:
             events = parse_events(file)
     else:
         automated_run = True
