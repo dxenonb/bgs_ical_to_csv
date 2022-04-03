@@ -2,7 +2,7 @@ name: Calendar
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: "0 6 * * MON-FRI"
   workflow_dispatch:
@@ -26,9 +26,9 @@ jobs:
         run: |
           python3 ical_to_csv.py
           echo Parsed calendar:
-          cat cal_parsed.csv
-          echo Rendered message:
-          cat cal_parsed.csv | python3 csv_to_calendar.py
+          cat cal_parsed.csv | tee events.csv
+          echo Rendered messages:
+          python3 csv_to_calendar.py
   post:
     name: Runs the script and posts to webhook
     runs-on: ubuntu-latest
@@ -45,7 +45,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install ics requests
       - name: Run
-        run: >
-          python3 ical_to_csv.py && cat cal_parsed.csv | python3 csv_to_calendar.py | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
+        run: |
+          python3 ical_to_csv.py 
+          cat cal_parsed.csv | python3 csv_to_calendar.py 
+          cat virtual.json | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
+          cat in_person.json | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
         env:
           WEBHOOK: ${{ secrets.CALENDAR_WEBHOOK }}
