@@ -20,12 +20,19 @@ default_preface = ''
 
 calendar_message_format = '''
 **__*Upcoming Virtual Events*__**
+
 {virtual_events}
+
 Links for joining will be posted near the time of the event. Keep a lookout in  #general!
+
 ***__Upcoming In-Person Events__***
+
 {in_person_events}
+
 :people_holding_hands: Vaccination is required to attend any in person event unless otherwise stated.
+
 {after_note}
+
 RSVP on meetup!
 https://www.meetup.com/BuffaloGameSpace/
 '''.strip()
@@ -51,7 +58,9 @@ emoji = {
     'showcase': 'night_with_stars',
     'location': 'pushpin',
     'jam': 'video_game',
-    'workshop': 'tools',
+    'arcade': 'joystick',
+    'project': 'tools',
+    'workshop': 'book',
     'santa': 'santa'
 }
 
@@ -68,9 +77,11 @@ class Event:
         # default to just sending the strings through
         # remove any `:` in case the caller already included them, e.g. ":kind:"
         emoji_string = self.kind.replace(':', '')
-        # attempt to lookup an emoji as an event kind, else wrap it in `:` to treat it as an emoji
-        emoji_string = emoji.get(self.kind, f':{self.kind}:')
+        # attempt to lookup an emoji for event kind, else let `kind` fall through as the emoji
+        emoji_string = emoji.get(self.kind, self.kind)
         location_string = location_map.get(self.location, self.location)
+        if location_string != '' and emoji['location'] not in location_string:
+            location_string = f':{emoji['location']}: {location_string}'
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
 
 def ordinal_date(date):
