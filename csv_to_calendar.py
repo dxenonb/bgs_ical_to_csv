@@ -89,7 +89,7 @@ class Event:
         self.start_time = start_time
         self.end_time = end_time
         self.location = location
-        self.virtual = location is None
+        self.virtual = location is None or location == 'Online event'
         self.future = False
     def line_item_args(self):
         # default to just sending the strings through
@@ -115,7 +115,7 @@ def ordinal_date(date):
 def line_item(emoji, title, date, start_time, end_time, after_line=None):
     date_string = date.strftime("%A, %B {S}").replace('{S}', ordinal_date(date))
     main = f':{emoji}: **{title}** • {date_string} • {start_time} - {end_time}'
-    return main if after_line is None else f'{main}\n*{after_line}*'
+    return main if after_line is None else f'{main}\n*{after_line}*\n'
 
 def line_items(items):
     return '\n'.join('> {}'.format(i.replace('\n', '\n> ')) for i in items)
