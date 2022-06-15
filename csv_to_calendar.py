@@ -129,7 +129,7 @@ def line_items(items):
     result = '\n'.join(result).strip()
 
     # move each item into a discord quote
-    return result.replace('\n', '\n> ')
+    return '> ' + result.replace('\n', '\n> ')
 
 def format_calendar(preface, in_person, virtual, future):
     after_note = ''
