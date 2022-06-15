@@ -50,7 +50,7 @@ future_message_format = '''
 
 {after_note}
 RSVP on meetup!
-https://www.meetup.com/BuffaloGameSpace/
+<https://www.meetup.com/BuffaloGameSpace/>
 
 '''.strip()
 
