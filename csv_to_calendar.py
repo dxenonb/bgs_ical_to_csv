@@ -47,7 +47,6 @@ future_message_format = '''
 ***__Future Events__***
 
 {future_events}
-
 {after_note}
 RSVP on meetup!
 <https://www.meetup.com/BuffaloGameSpace/>
@@ -97,8 +96,9 @@ class Event:
         emoji_string = self.kind.replace(':', '')
         # attempt to lookup an emoji for event kind, else let `kind` fall through as the emoji
         emoji_string = emoji.get(self.kind, self.kind)
-        if self.future:
+        if self.future or self.virtual:
             # do not include the after line for future events (Meetup doesnt report location accurately)
+            # do not include the after line for virtual events (because we dont want to)
             location_string = None
         else:
             location_string = location_map.get(self.location, self.location)
@@ -115,10 +115,21 @@ def ordinal_date(date):
 def line_item(emoji, title, date, start_time, end_time, after_line=None):
     date_string = date.strftime("%A, %B {S}").replace('{S}', ordinal_date(date))
     main = f':{emoji}: **{title}** • {date_string} • {start_time} - {end_time}'
-    return main if after_line is None else f'{main}\n*{after_line}*\n'
+    return main if after_line is None else f'{main}\n*{after_line}*'
 
 def line_items(items):
-    return '\n'.join('> {}'.format(i.replace('\n', '\n> ')) for i in items)
+    result = []
+    for item in items:
+        if '\n' in item:
+            # add extra space after multi line items
+            result.append(item + '\n')
+        else:
+            result.append(item)
+    # join the contents, but remove the trailing line (won't format correctly on discord)
+    result = '\n'.join(result).strip()
+
+    # move each item into a discord quote
+    return result.replace('\n', '\n> ')
 
 def format_calendar(preface, in_person, virtual, future):
     after_note = ''
