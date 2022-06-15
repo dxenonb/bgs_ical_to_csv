@@ -50,5 +50,6 @@ jobs:
           cat cal_parsed.csv | python3 csv_to_calendar.py 
           cat virtual.json | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
           cat in_person.json | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
+          cat future.json | curl -X POST -H "Content-Type: application/json" --data @- $WEBHOOK
         env:
           WEBHOOK: ${{ secrets.CALENDAR_WEBHOOK }}
