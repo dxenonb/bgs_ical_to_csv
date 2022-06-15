@@ -1,6 +1,7 @@
 from ics import Calendar
 import csv
 import requests
+import platform
 
 url = "https://www.meetup.com/BuffaloGameSpace/events/ical/"
 r = requests.get(url)
@@ -14,6 +15,11 @@ event_kinds = {
     'Workshop' : 'workshop',
     'Arcade' : 'arcade'
 }
+
+time_format = "%-I:%M%p"
+if platform.system() == 'Windows':
+    # windows doesn't support `-`
+    time_format = "%I:%M%p"
 
 with open('cal_parsed.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',' )
@@ -42,8 +48,8 @@ with open('cal_parsed.csv', 'w', newline='') as csvfile:
                     event.begin.date(), 
                     "1", 
                     "1", 
-                    event.begin.time().strftime("%-I:%M%p"),
-                    event.end.time().strftime("%-I:%M%p"), 
+                    event.begin.time().strftime(time_format),
+                    event.end.time().strftime(time_format), 
                     event.location
                 ]
             )
