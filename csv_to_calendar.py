@@ -8,8 +8,12 @@ import json
 
 events_path = 'events.csv'
 preface_path = 'preface.txt'
-in_person_message_path = 'in_person.json'
-virtual_message_path = 'virtual.json'
+
+message_paths = [
+    'in_person.json',
+    'virtual.json',
+    'future.json',
+]
 
 ical_limit = datetime.date.today() + timedelta(weeks=8)
 
@@ -37,11 +41,17 @@ in_person_message_format = '''
 {in_person_events}
 
 :people_holding_hands: Vaccination is required to attend any in person event unless otherwise stated.
+'''.strip()
+
+future_message_format = '''
+***__Future Events__***
+
+{future_events}
 
 {after_note}
-
 RSVP on meetup!
 https://www.meetup.com/BuffaloGameSpace/
+
 '''.strip()
 
 events_csv_header = [
@@ -80,15 +90,20 @@ class Event:
         self.end_time = end_time
         self.location = location
         self.virtual = location is None
+        self.future = False
     def line_item_args(self):
         # default to just sending the strings through
         # remove any `:` in case the caller already included them, e.g. ":kind:"
         emoji_string = self.kind.replace(':', '')
         # attempt to lookup an emoji for event kind, else let `kind` fall through as the emoji
         emoji_string = emoji.get(self.kind, self.kind)
-        location_string = location_map.get(self.location, self.location)
-        if location_string is not None and location_string != '' and emoji['location'] not in location_string:
-            location_string = f":{emoji['location']}: {location_string}"
+        if self.future:
+            # do not include the after line for future events (Meetup doesnt report location accurately)
+            location_string = None
+        else:
+            location_string = location_map.get(self.location, self.location)
+            if location_string is not None and location_string != '' and emoji['location'] not in location_string:
+                location_string = f":{emoji['location']}: {location_string}"
         return (emoji_string, self.title, self.date, self.start_time, self.end_time, location_string)
 
 def ordinal_date(date):
@@ -105,11 +120,12 @@ def line_item(emoji, title, date, start_time, end_time, after_line=None):
 def line_items(items):
     return '\n'.join('> {}'.format(i.replace('\n', '\n> ')) for i in items)
 
-def format_calendar(preface, in_person, virtual):
+def format_calendar(preface, in_person, virtual, future):
     after_note = ''
 
     virtual_events = line_items(line_item(*i) for i in virtual).strip()
     in_person_events = line_items(line_item(*i) for i in in_person).strip()
+    future_events = line_items(line_item(*i) for i in future).strip()
 
     v = virtual_message_format.format(
         preface=preface, 
@@ -117,9 +133,12 @@ def format_calendar(preface, in_person, virtual):
     )
     ip = in_person_message_format.format(
         in_person_events=in_person_events, 
+    )
+    f = future_message_format.format(
+        future_events=future_events,
         after_note=after_note
     )
-    return v, ip
+    return v, ip, f
 
 def try_read_stdin():
     if not os.isatty(sys.stdin.fileno()):
@@ -142,6 +161,18 @@ def parse_events(lines):
             date = date + timedelta(days=days_between)
     return events
 
+def detect_repeats(events):
+    """
+        There appears to be a bug in Meetup's ICS file (ugh) - only the next instance of a repeated event shows its location.
+        So, we group all repeated events as "future".
+    """
+    instances = {}
+    for event in events:
+        instances[event.title] = 1 + instances.setdefault(event.title, 0)
+    for event in events:
+        if not event.location and instances[event.title] > 1:
+            event.future = True
+
 def main():
     try:
         preface = Path(preface_path).read_text()
@@ -156,30 +187,29 @@ def main():
     else:
         automated_run = True
         events = parse_events(contents)
-        # keep only a certain window of events
-        events = [i for i in events if i.date <= ical_limit]
-                
-    # now unused:
-    # tri_main = f":{emoji['location']}: Buffalo Game Space @ Tri Main Center, 2495 Main Street, Suite #454"
-    # showcase = 'Game Dev Meetup / Showcase'
-    # first_showcase = datetime.date(2021, 10, 7)
+    
+    # keep only a certain window of events
+    events = [i for i in events if i.date <= ical_limit]
+    
+    detect_repeats(events)
     
     events.sort(key=lambda e: e.date)
 
-    virtual = (i.line_item_args() for i in events if i.virtual)
-    in_person = (i.line_item_args() for i in events if not i.virtual)
+    virtual = (i.line_item_args() for i in events if i.virtual and not i.future)
+    in_person = (i.line_item_args() for i in events if not i.virtual and not i.future)
+    future = (i.line_item_args() for i in events if i.future)
 
-    virtual_message, in_person_message = format_calendar(preface, in_person, virtual)
+    message_parts = format_calendar(preface, in_person, virtual, future)
 
     if automated_run:
-        Path(virtual_message_path).write_text(json.dumps({
-            'content': virtual_message
-        }))
-        Path(in_person_message_path).write_text(json.dumps({
-            'content': in_person_message
-        }))
-        print(f'Messages written to {virtual_message_path} and {in_person_message_path}')
+        for file_path, message in zip(message_paths, message_parts):
+            Path(file_path).write_text(json.dumps({
+                'content': message
+            }))
+        output_files = ', '.join(message_paths)
+        print(f'Messages written to {output_files}')
     else:
+        message = '\n\n'.join(message_parts)
         print('== REVIEW & COPY INTO DISCORD: ==')
         print(message)
         print('== END ==')
